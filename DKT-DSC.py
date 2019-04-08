@@ -10,16 +10,22 @@ from sklearn import metrics
 from math import sqrt
 import os
 from numpy import array
-from sklearn.cross_validation import KFold
+from sklearn.model_selection import KFold
 import math
 import pandas as pd
+from os import sys
 
 
 model_name = 'DKT-DSC'
 data_name= 'Assist_09' # 
 
-
-
+def del_all_flags(FLAGS):
+    flags_dict = FLAGS._flags()
+    keys_list = [keys for keys in flags_dict]
+    for keys in keys_list:
+        FLAGS.__delattr__(keys)
+        
+del_all_flags(tf.flags.FLAGS)
 # flags
 tf.flags.DEFINE_float("epsilon", 0.1, "Epsilon value for Adam Optimizer.")
 tf.flags.DEFINE_float("l2_lambda", 0.3, "Lambda for l2 loss.")
@@ -29,18 +35,18 @@ tf.flags.DEFINE_float("keep_prob", 0.6, "Keep probability for dropout")
 tf.flags.DEFINE_integer("hidden_layer_num", 1, "The number of hidden layers (Integer)")
 tf.flags.DEFINE_integer("hidden_size", 400, "The number of hidden nodes (Integer)")
 tf.flags.DEFINE_integer("evaluation_interval", 5, "Evaluate and print results every x epochs")
-tf.flags.DEFINE_integer("batch_size", 16, "Batch size for training.")
+tf.flags.DEFINE_integer("batch_size", 32, "Batch size for training.")
 tf.flags.DEFINE_integer("problem_len", 20, "length for each time interval")
 tf.flags.DEFINE_integer("num_cluster", 7, "length for each time interval")
-tf.flags.DEFINE_integer("epochs", 20, "Number of epochs to train for.")
+tf.flags.DEFINE_integer("epochs", 100, "Number of epochs to train for.")
 tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
 tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 tf.flags.DEFINE_string("train_data_path", 'data/'+data_name+'_train.csv', "Path to the training dataset")
 tf.flags.DEFINE_string("test_data_path", 'data/'+data_name+'_test.csv', "Path to the testing dataset")
-tf.flags.DEFINE_boolean("model_name", model_name, "model used")
+tf.flags.DEFINE_string("model_name", model_name, "model used")
 
 FLAGS = tf.flags.FLAGS
-FLAGS._parse_flags()
+FLAGS(sys.argv)
 print("\nParameters:")
 for attr, value in sorted(FLAGS.__flags.items()):
     print("{}={}".format(attr.upper(), value))
@@ -115,7 +121,7 @@ class StudentModel(object):
         for i in range(num_steps):             
             c = tf.squeeze(slice_c_data[i], 1)
             x = tf.squeeze(slice_x_data[i], 1)
-            sr = tf.squeeze(slice_sr_data[i], 1)
+            # sr = tf.squeeze(slice_sr_data[i], 1)
             
             t1= tf.concat([c,x], 1)
             input_embed_l.append(t1)
@@ -503,4 +509,7 @@ def main(unused_args):
              
                
 if __name__ == "__main__":
+    start_time = time.time()
     tf.app.run()
+    elapsed_time = time.time() - start_time
+    print(elapsed_time)
